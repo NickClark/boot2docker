@@ -50,7 +50,11 @@ RUN jobs=$(nproc); \
 # The post kernel build process
 
 ENV ROOTFS          /rootfs
-ENV TCL_REPO_BASE   http://tinycorelinux.net/5.x/x86
+#ENV TCL_REPO_BASE   http://tinycorelinux.net/5.x/x86
+#ENV TCL_ROOTFS      ${TCL_REPO_BASE}/release/distribution_files/rootfs.gz
+ENV TCL_REPO_BASE   http://tinycorelinux.net/6.x/x86_64
+ENV TCL_ROOTFS      ${TCL_REPO_BASE}/release/distribution_files/rootfs64.gz
+# http://distro.ibiblio.org/tinycorelinux/6.x/x86_64/tcz/updates/updatelist.txt
 ENV TCZ_DEPS        iptables \
                     iproute2 \
                     openssh openssl-1.0.0 \
@@ -60,7 +64,8 @@ ENV TCZ_DEPS        iptables \
                     xz liblzma \
                     git expat2 libiconv libidn libgpg-error libgcrypt libssh2 \
                     nfs-utils tcp_wrappers portmap rpcbind libtirpc \
-                    curl ntpclient
+                    curl
+                    # ntpclient
 
 # Make the ROOTFS
 RUN mkdir -p $ROOTFS
@@ -112,7 +117,7 @@ RUN cd /linux-kernel && \
 RUN cp -v /linux-kernel/arch/x86_64/boot/bzImage /tmp/iso/boot/vmlinuz64
 
 # Download the rootfs, don't unpack it though:
-RUN curl -L -o /tcl_rootfs.gz $TCL_REPO_BASE/release/distribution_files/rootfs.gz
+RUN curl -L -o /tcl_rootfs.gz $TCL_ROOTFS
 
 # Install the TCZ dependencies
 RUN for dep in $TCZ_DEPS; do \
@@ -158,7 +163,7 @@ RUN cp -v $ROOTFS/etc/version /tmp/iso/version
 # Note: `docker version` returns non-true when there is no server to ask
 RUN curl -L -o $ROOTFS/usr/local/bin/docker https://get.docker.io/builds/Linux/x86_64/docker-$(cat $ROOTFS/etc/version) && \
     chmod +x $ROOTFS/usr/local/bin/docker && \
-    { $ROOTFS/usr/local/bin/docker version || true; }
+    $ROOTFS/usr/local/bin/docker -v
 
 # Get the git versioning info
 COPY .git /git/.git
